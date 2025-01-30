@@ -31,7 +31,7 @@ export interface Config {
   'ai-service': AIServiceConfig;
 }
 
-// NOTE: configPath is relative to `tauri-src`
+// NOTE: `configPath` is relative to `tauri-src`.
 export async function loadConfig(configPath: string = '../public/default-config.toml'): Promise<Config> {
   const config = await invoke('load_config', { configPath: configPath }) as Config;
   return config;
