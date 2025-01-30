@@ -1,3 +1,4 @@
+import { Message } from "../types/chat";
 interface OllamaConfig {
   baseUrl: string;
   model: string;
@@ -10,7 +11,7 @@ export class OllamaService {
     this.config = config;
   }
 
-  async askQuestion(context: string, question: string): Promise<string> {
+  async askQuestion(question: string, context?: string): Promise<string> {
     try {
       const response = await fetch(`${this.config.baseUrl}/api/generate`, {
         method: 'POST',
@@ -19,7 +20,9 @@ export class OllamaService {
         },
         body: JSON.stringify({
           model: this.config.model,
-          prompt: `Context: ${context}\n\nQuestion: ${question}`,
+          prompt: context 
+            ? `Context: ${context}\n\nQuestion: ${question}`
+            : question,
           stream: false,
         }),
       });

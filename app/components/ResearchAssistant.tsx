@@ -1,30 +1,47 @@
 import React, { useState } from 'react';
-import { Document, Page } from 'react-pdf';
-import { pdfjs } from 'react-pdf';
-import { Message } from '../types/chat';
 import { LoadingDots } from './ui/loading-dots';
+import { WebPDFLoader } from "@langchain/community/document_loaders/web/pdf";
 
-// Initialize PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 interface ResearchAssistantProps {
-  onAskQuestion: (question: string) => Promise<string>;
+  onAskQuestion: (question: string, context?: string) => Promise<string>;
 }
 
 export function ResearchAssistant({ onAskQuestion }: ResearchAssistantProps) {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [question, setQuestion] = useState('');
-  const [response, setResponse] = useState('');
-  const [numPages, setNumPages] = useState<number>(0);
-  const [pageNumber, setPageNumber] = useState(1);
   const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [pdfContent, setPdfContent] = useState<string | null>(null);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
+    if (!file) return;
+
+    try {
+      setIsLoading(true);
       setPdfFile(file);
+
+      const blob = new Blob([await file.arrayBuffer()], { type: file.type });
+      
+      // Use WebPDFLoader instead of PDFLoader
+      const loader = new WebPDFLoader(blob, {
+        // Optional: Add custom parsing options
+        splitPages: true,
+      });
+
+      const docs = await loader.load();
+      const textContent = docs.map(doc => doc.pageContent).join('\n');
+      
+      setPdfContent(textContent);
+    } catch (error) {
+      console.error('Error loading PDF:', error);
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: 'Error loading PDF. Please try again.'
+      }]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -37,19 +54,18 @@ export function ResearchAssistant({ onAskQuestion }: ResearchAssistantProps) {
       content: question,
     };
 
-    setMessages((prev) => [...prev, newMessage]);
+    setMessages(prev => [...prev, newMessage]);
     setQuestion('');
 
     try {
       setIsLoading(true);
-      const response = await onAskQuestion(question);
+      const response = await onAskQuestion(question, pdfContent || undefined);
       
       if (!response) {
         throw new Error('No response received from the assistant');
       }
 
-      setResponse(response);
-      setMessages((prev) => [...prev, { role: 'assistant', content: response }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: response }]);
     } catch (error) {
       console.error('Error details:', {
         error,
@@ -63,8 +79,7 @@ export function ResearchAssistant({ onAskQuestion }: ResearchAssistantProps) {
         ? `Error: ${error.message}`
         : 'An error occurred while processing your request.';
 
-      setResponse(errorMessage);
-      setMessages((prev) => [...prev, { 
+      setMessages(prev => [...prev, { 
         role: 'assistant', 
         content: errorMessage,
       }]);
@@ -79,12 +94,11 @@ export function ResearchAssistant({ onAskQuestion }: ResearchAssistantProps) {
         {/* PDF Viewer Section */}
         <div className="w-1/2 p-4 border-r">
           {pdfFile ? (
-            <Document
-              file={pdfFile}
-              onLoadSuccess={({ numPages }) => setNumPages(numPages)}
-            >
-              <Page pageNumber={pageNumber} />
-            </Document>
+            <div className="flex flex-col h-full">
+              <div className="mb-4 text-lg font-medium">
+                {pdfFile.name}
+              </div>
+            </div>
           ) : (
             <div className="flex items-center justify-center h-full border-2 border-dashed">
               <input
@@ -92,6 +106,8 @@ export function ResearchAssistant({ onAskQuestion }: ResearchAssistantProps) {
                 accept=".pdf"
                 onChange={handleFileChange}
                 className="p-4"
+                aria-label="Upload PDF"
+                title="Choose a PDF file to upload"
               />
             </div>
           )}
