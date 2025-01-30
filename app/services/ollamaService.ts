@@ -1,4 +1,3 @@
-import { Message } from "../types/chat";
 interface OllamaConfig {
   baseUrl: string;
   model: string;
