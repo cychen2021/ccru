@@ -65,7 +65,7 @@ React/Next.js
   - Utilize the action function from next-safe-action for creating actions.
   - Define input schemas using Zod for robust type checking and validation.
   - Handle errors gracefully and return appropriate responses.
-  - Use import type { ActionResponse } from '@/types/actions'
+  - Use import type { ActionResponse } from './types/actions'
   - Ensure all server actions return the ActionResponse type
   - Implement consistent error handling and success responses using ActionResponse  
 
