@@ -1,0 +1,8 @@
+---
+description: README
+globs: 
+---
+
+# Project purpose
+
+The project is an AI research assistance. It can read papers (serving as PDFs and other formats) and search the web for information related to a paper. It uses React.js (with all code in TypeScript) as the frontend and ollama as the backend (which will be configurable in the future).
