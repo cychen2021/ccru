@@ -1,6 +1,7 @@
 import { AIService } from './AIService';
 
 interface AzureAIConfig {
+  baseUrl: string;
   apiKey: string;
   model: string;
 }

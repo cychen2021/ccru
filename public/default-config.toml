@@ -1,0 +1,6 @@
+[ai-service]
+provider = "ollama"
+
+[ai-service.ollama]
+baseUrl = "http://localhost:11434"
+model = "phi4"
