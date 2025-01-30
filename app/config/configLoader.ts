@@ -27,17 +27,12 @@ export type AIServiceConfig = {
   providerConfig: DeepSeekConfig;
 }
 
-interface Config {
-  'ai-service': {
-    provider: 'ollama' | 'azure' | 'deepseek'
-    ollama?: OllamaConfig;
-    azure?: AzureConfig;
-    deepseek?: DeepSeekConfig;
-  };
+export interface Config {
+  'ai-service': AIServiceConfig;
 }
 
 // Note: configPath is relative to `tauri-src`
-export async function loadConfig(configPath: string = '../public/default-config.toml'): Promise<AIServiceConfig> {
-  const config = await invoke('get_config', { configPath: configPath }) as AIServiceConfig;
+export async function loadConfig(configPath: string = '../public/default-config.toml'): Promise<Config> {
+  const config = await invoke('load_config', { configPath: configPath }) as Config;
   return config;
 } 

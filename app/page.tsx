@@ -2,21 +2,21 @@
 
 import { ResearchAssistant } from './components/ResearchAssistant';
 import { AIService } from './services/AIService';
-import { loadConfig, AIServiceConfig } from './config/configLoader';
+import { loadConfig, Config } from './config/configLoader';
 import { AIServiceFactory } from './services/AIServiceFactory';
 import { useEffect, useState } from 'react';
 
 export default function Home() {
   const [aiService, setAIService] = useState<AIService | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [config, setConfig] = useState<AIServiceConfig | null>(null);
+  const [config, setConfig] = useState<Config | null>(null);
 
   useEffect(() => {
     async function init() {
       try {
         const loadedConfig = await loadConfig();
         setConfig(loadedConfig);
-        const service = AIServiceFactory.createService(loadedConfig);
+        const service = AIServiceFactory.createService(loadedConfig['ai-service']);
         setAIService(service);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to initialize AI service');
