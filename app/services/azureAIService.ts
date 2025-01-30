@@ -1,0 +1,14 @@
+import { AIService } from './AIService';
+
+interface AzureAIConfig {
+  apiKey: string;
+  model: string;
+}
+
+export class AzureAIService implements AIService {
+  constructor(private config: AzureAIConfig) {}
+
+  async askQuestion(question: string, context?: string): Promise<string> {
+    throw new Error('Method not implemented.'); 
+  }
+}

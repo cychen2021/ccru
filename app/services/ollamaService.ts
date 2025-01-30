@@ -1,9 +1,11 @@
+import { AIService } from './AIService';
+
 interface OllamaConfig {
   baseUrl: string;
   model: string;
 }
 
-export class OllamaService {
+export class OllamaService implements AIService {
   private config: OllamaConfig;
 
   constructor(config: OllamaConfig) {
