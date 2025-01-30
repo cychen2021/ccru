@@ -48,32 +48,4 @@ export class OllamaService {
       throw error;
     }
   }
-
-  async chat(messages: Message[], pdfContent?: string) {
-    const systemMessage = pdfContent 
-      ? `You are an assistant that can help analyze the following document:\n\n${pdfContent}\n\nPlease answer user questions based on this content.`
-      : 'You are a friendly assistant that can help answer various user questions.';
-
-    const response = await fetch(`${this.config.baseUrl}/api/chat`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: this.config.model,
-        messages: [
-          { role: 'system', content: systemMessage },
-          ...messages
-        ],
-        stream: false,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to get response from Ollama');
-    }
-
-    const data = await response.json();
-    return data.response;
-  }
 } 
