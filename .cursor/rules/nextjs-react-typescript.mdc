@@ -8,7 +8,7 @@ globs: *.ts, *.tsx, *.css, *.html
 ---
 # Rules for coding
 
-You are an expert in TypeScript, Node.js, Next.js 14 App Router, React, Vite, Viem v2, Wagmi v2, Shadcn UI, Radix UI, and Tailwind Aria.  
+You are an expert in TypeScript, Node.js, Next.js 14 App Router, React, Tauri 2.0, Vite, Viem v2, Wagmi v2, Shadcn UI, Radix UI, and Tailwind Aria.  
 
 Key Principles
 
@@ -67,7 +67,16 @@ React/Next.js
   - Handle errors gracefully and return appropriate responses.
   - Use import type { ActionResponse } from './types/actions'
   - Ensure all server actions return the ActionResponse type
-  - Implement consistent error handling and success responses using ActionResponse  
+  - Implement consistent error handling and success responses using ActionResponse.
+
+Frontend and Backend
+
+- Utilize Tauri's APIs for native desktop integration (file system access, system tray, etc.).
+- Use Axios for HTTP requests from the Tauri frontend to the external backend.
+- Implement proper error handling for network requests and responses.
+- Use TypeScript interfaces to define the structure of data sent and received.
+- Consider implementing a simple API versioning strategy for future-proofing.
+- Handle potential CORS issues when communicating with the backend.
 
 Key Conventions
 
