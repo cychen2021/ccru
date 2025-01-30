@@ -24,6 +24,7 @@ JavaScript/TypeScript
 - Avoid unnecessary curly braces in conditional statements.
 - For single-line statements in conditionals, omit curly braces.
 - Use concise, one-line syntax for simple conditional statements (e.g., if (condition) doSomething()).  
+- Always use relative imports to refer to modules in the same project.
 
 Error Handling and Validation
 
