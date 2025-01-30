@@ -1,12 +1,11 @@
-'use client';
-
+import React from 'react';
 import { ResearchAssistant } from './components/ResearchAssistant';
 import { OllamaService } from './services/ollamaService';
 import { ollamaConfig } from './config/ollama';
 
 const ollamaService = new OllamaService(ollamaConfig);
 
-export default function Home() {
+function App() {
   const handleQuestion = async (question: string) => {
     try {
       return await ollamaService.askQuestion('', question);
@@ -17,8 +16,10 @@ export default function Home() {
   };
 
   return (
-    <main>
+    <div className="App">
       <ResearchAssistant onAskQuestion={handleQuestion} />
-    </main>
+    </div>
   );
-} 
+}
+
+export default App; 
