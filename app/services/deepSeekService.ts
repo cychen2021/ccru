@@ -12,7 +12,7 @@ export class DeepSeekService implements AIService {
     this.config = config;
   }
 
-  async askQuestion(question: string, context?: string): Promise<string> {
+  async askQuestion(_question: string, _context?: string): Promise<string> {
     throw new Error('Not implemented');
   }
 } 
