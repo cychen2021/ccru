@@ -72,7 +72,7 @@ React/Next.js
 Frontend and Backend
 
 - Utilize Tauri's APIs for native desktop integration (file system access, system tray, etc.).
-- Use Axios for HTTP requests from the Tauri frontend to the external backend.
+- Utilize Tauri's API for communication between the TypeScript frontend and the Rust backend.
 - Implement proper error handling for network requests and responses.
 - Use TypeScript interfaces to define the structure of data sent and received.
 - Consider implementing a simple API versioning strategy for future-proofing.
