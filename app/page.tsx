@@ -2,9 +2,11 @@
 
 import { ResearchAssistant } from './components/ResearchAssistant';
 import { AIService } from './services/AIService';
-import { loadConfig, Config } from './config/configLoader';
+import { loadConfig, Config } from './config/config';
 import { AIServiceFactory } from './services/AIServiceFactory';
 import { useEffect, useState } from 'react';
+import { ConfigPanel } from './components/ConfigPanel';
+import { invoke } from '@tauri-apps/api/core';
 
 export default function Home() {
   const [aiService, setAIService] = useState<AIService | null>(null);
@@ -42,16 +44,32 @@ export default function Home() {
     }
   };
 
+  const handleSaveConfig = async (newConfig: Config) => {
+    try {
+      await invoke('save_config', { 
+        config: newConfig,
+        configPath: '../public/default-config.toml'
+      });
+      setConfig(newConfig);
+      const service = AIServiceFactory.createService(newConfig['ai-service']);
+      setAIService(service);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save configuration');
+      console.error('Failed to save configuration:', err);
+    }
+  };
+
   if (error) {
     return <div className="text-red-500">Error: {error}</div>;
   }
 
   return (
-    <main>
+    <main className="p-4">
       {config && (
-        <pre className="p-4 bg-gray-100 mb-4 overflow-auto">
-          {JSON.stringify(config, null, 2)}
-        </pre>
+        <ConfigPanel 
+          config={config} 
+          onSave={handleSaveConfig}
+        />
       )}
       {aiService ? (
         <ResearchAssistant onAskQuestion={handleQuestion} />

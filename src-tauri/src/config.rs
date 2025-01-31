@@ -26,3 +26,12 @@ pub fn load_config(config_path: String) -> Config {
     config
 } 
 
+#[tauri::command]
+pub fn save_config(config: Config, config_path: String) {
+    let config_str = toml::to_string(&config)
+        .expect("Failed to serialize config to TOML");
+    
+    fs::write(config_path, config_str)
+        .expect("Failed to write config file");
+}
+
