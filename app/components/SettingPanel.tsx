@@ -3,14 +3,14 @@
 import { useState } from 'react';
 import { Config } from '../config/config';
 import { AIServiceConfig } from '../config/aiServiceConfig';
-import { ConfigContents } from './ConfigContents';
+import { ConfigContents } from './SettingContents';
 
 interface ConfigPanelProps {
   initConfig: Config;
   onSave: (config: Config) => Promise<void>;
 }
 
-export function ConfigPanel({ initConfig, onSave }: ConfigPanelProps) {
+export function SettingPanel({ initConfig, onSave }: ConfigPanelProps) {
   const [currentConfig, setCurrentConfig] = useState<Config>(structuredClone(initConfig));
   const [isEditing, setIsEditing] = useState(false);
 

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { Config, loadConfig, saveConfig } from '../config/config';
-import { ConfigPanel } from '../components/ConfigPanel';
+import { SettingPanel } from '../components/SettingPanel';
 
 export default function Settings() {
   const [config, setConfig] = useState<Config | null>(null);
@@ -48,7 +48,7 @@ export default function Settings() {
         </Link>
       </div>
       {config ? (
-        <ConfigPanel 
+        <SettingPanel 
           initConfig={config} 
           onSave={handleSaveConfig}
         />
