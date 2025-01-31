@@ -6,43 +6,62 @@ import { AIServiceConfig } from '../config/aiServiceConfig';
 import { ConfigContents } from './ConfigContents';
 
 interface ConfigPanelProps {
-  config: Config;
+  initConfig: Config;
   onSave: (config: Config) => Promise<void>;
 }
 
-export function ConfigPanel({ config, onSave }: ConfigPanelProps) {
-  const [currentConfig, setCurrentConfig] = useState<Config>(config);
+export function ConfigPanel({ initConfig, onSave }: ConfigPanelProps) {
+  const [currentConfig, setCurrentConfig] = useState<Config>(structuredClone(initConfig));
   const [isEditing, setIsEditing] = useState(false);
 
   const handleProviderChange = (provider: AIServiceConfig['provider']) => {
-    const defaultConfigs: Record<AIServiceConfig['provider'], any> = {
+    const defaultValues = {
       ollama: { baseUrl: 'http://localhost:11434', model: 'llama2' },
       azure: { baseUrl: '', apiKey: '', model: 'gpt-4' },
       deepseek: { apiKey: '', model: 'deepseek-chat' }
     };
-
-    setCurrentConfig({
+    setCurrentConfig(prev => ({
       'ai-service': {
         provider,
-        providerConfig: defaultConfigs[provider]!
-      }
-    });
+        ollama: prev['ai-service'].ollama || defaultValues.ollama,
+        azure: prev['ai-service'].azure || defaultValues.azure,
+        deepseek: prev['ai-service'].deepseek || defaultValues.deepseek,
+      } as AIServiceConfig,
+    }));
   };
 
   const handleConfigChange = (key: string, value: string) => {
-    setCurrentConfig((prev) => ({
-      'ai-service': {
-        ...prev['ai-service'],
-        providerConfig: {
-          ...prev['ai-service'].providerConfig,
-          [key]: value
-        }
+    setCurrentConfig((prev) => {
+      const newAIServiceConfig = structuredClone(prev['ai-service']);
+      const provider = newAIServiceConfig.provider;
+      switch (provider) {
+        case 'ollama':
+          newAIServiceConfig.ollama = {
+            ...newAIServiceConfig.ollama!,
+            [key]: value
+          };
+          break;
+        case 'azure':
+          newAIServiceConfig.azure = {
+            ...newAIServiceConfig.azure!,
+            [key]: value
+          };
+          break;
+        case 'deepseek':
+          newAIServiceConfig.deepseek = {
+            ...newAIServiceConfig.deepseek!,
+            [key]: value
+          };
+          break;
       }
-    } as Config));
+      return {
+        'ai-service': newAIServiceConfig,
+      } as Config;
+    });
   };
 
   const renderProviderConfig = () => {
-    const { provider, providerConfig } = currentConfig['ai-service'];
+    const { provider, ollama, azure, deepseek } = currentConfig['ai-service'];
 
     switch (provider) {
       case 'ollama':
@@ -50,14 +69,14 @@ export function ConfigPanel({ config, onSave }: ConfigPanelProps) {
           <>
             <input
               type="text"
-              value={providerConfig?.baseUrl || ''}
+              defaultValue={ollama?.baseUrl || ''}
               onChange={e => handleConfigChange('baseUrl', e.target.value)}
               placeholder="Base URL"
               className="p-2 border rounded"
             />
             <input
               type="text"
-              value={providerConfig?.model || ''}
+              defaultValue={ollama?.model || ''}
               onChange={e => handleConfigChange('model', e.target.value)}
               placeholder="Model"
               className="p-2 border rounded"
@@ -70,21 +89,21 @@ export function ConfigPanel({ config, onSave }: ConfigPanelProps) {
           <>
             <input
               type="text"
-              value={providerConfig?.baseUrl || ''}
+              defaultValue={azure?.baseUrl || ''}
               onChange={e => handleConfigChange('baseUrl', e.target.value)}
               placeholder="Base URL"
               className="p-2 border rounded"
             />
             <input
               type="password"
-              value={providerConfig?.apiKey || ''}
+              defaultValue={azure?.apiKey || ''}
               onChange={e => handleConfigChange('apiKey', e.target.value)}
               placeholder="API Key"
               className="p-2 border rounded"
             />
             <input
               type="text"
-              value={providerConfig?.model || ''}
+              defaultValue={azure?.model || ''}
               onChange={e => handleConfigChange('model', e.target.value)}
               placeholder="Model"
               className="p-2 border rounded"
@@ -97,14 +116,14 @@ export function ConfigPanel({ config, onSave }: ConfigPanelProps) {
           <>
             <input
               type="password"
-              value={providerConfig?.apiKey || ''}
+              defaultValue={deepseek?.apiKey || ''}
               onChange={e => handleConfigChange('apiKey', e.target.value)}
               placeholder="API Key"
               className="p-2 border rounded"
             />
             <input
               type="text"
-              value={providerConfig?.model || ''}
+              defaultValue={deepseek?.model || ''}
               onChange={e => handleConfigChange('model', e.target.value)}
               placeholder="Model"
               className="p-2 border rounded"

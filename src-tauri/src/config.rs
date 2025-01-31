@@ -3,10 +3,34 @@ use toml;
 use std::fs;
 
 #[derive(Deserialize, Serialize)]
+pub struct OllamaConfig {
+    #[serde(rename = "baseUrl")]
+    base_url: String,
+    model: String,
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct AzureConfig {
+    #[serde(rename = "baseUrl")]
+    base_url: String,
+    #[serde(rename = "apiKey")]
+    api_key: String,
+    model: String,
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct DeepSeekConfig {
+    #[serde(rename = "apiKey")]
+    api_key: String,
+    model: String,
+}
+
+#[derive(Deserialize, Serialize)]
 pub struct AIService {
     provider: String,
-    #[serde(flatten)]
-    provider_config: toml::Value,
+    ollama: Option<OllamaConfig>,
+    azure: Option<AzureConfig>,
+    deepseek: Option<DeepSeekConfig>,
 }
 
 #[derive(Deserialize, Serialize)]

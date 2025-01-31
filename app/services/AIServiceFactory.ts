@@ -8,13 +8,13 @@ export class AIServiceFactory {
   static createService(config: AIServiceConfig): AIService {
     switch (config.provider) {
       case 'ollama':
-        return new OllamaService(config.providerConfig);
+        return new OllamaService(config.ollama!);
       
       case 'azure':
-        return new AzureAIService(config.providerConfig);
+        return new AzureAIService(config.azure!);
         
       case 'deepseek':
-        return new DeepSeekService(config.providerConfig);
+        return new DeepSeekService(config.deepseek!);
     }
   }
 } 

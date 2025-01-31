@@ -15,12 +15,8 @@ export interface DeepSeekConfig {
 }
 
 export type AIServiceConfig = {
-  provider: 'ollama';
-  providerConfig: OllamaConfig;
-} | {
-  provider: 'azure';
-  providerConfig: AzureConfig;
-} | {
-  provider: 'deepseek';
-  providerConfig: DeepSeekConfig;
+  provider: 'ollama' | 'azure' | 'deepseek';
+  ollama?: OllamaConfig;
+  azure?: AzureConfig;
+  deepseek?: DeepSeekConfig;
 }

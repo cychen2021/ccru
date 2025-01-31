@@ -9,14 +9,22 @@ interface ConfigContentsProps {
 }
 
 export function ConfigContents({ config, onProviderChange }: ConfigContentsProps) {
-  const { provider, providerConfig } = config['ai-service'];
+  const aiServiceConfig = config['ai-service'];
+  const providerConfig = (() => {switch (aiServiceConfig.provider) {
+    case 'ollama':
+      return aiServiceConfig.ollama;
+    case 'azure':
+      return aiServiceConfig.azure;
+    case 'deepseek':
+      return aiServiceConfig.deepseek;
+  }})();
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Provider:</h3>
         <select 
-          value={provider}
+          value={aiServiceConfig.provider}
           onChange={(e) => onProviderChange(e.target.value as AIServiceConfig['provider'])}
           className="p-2 border rounded"
           aria-label="AI Service Provider"

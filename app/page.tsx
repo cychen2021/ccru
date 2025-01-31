@@ -1,32 +1,13 @@
 'use client';
 
+import Link from 'next/link';
 import { ResearchAssistant } from './components/ResearchAssistant';
 import { AIService } from './services/AIService';
-import { loadConfig, Config } from './config/config';
-import { AIServiceFactory } from './services/AIServiceFactory';
-import { useEffect, useState } from 'react';
-import { ConfigPanel } from './components/ConfigPanel';
-import { invoke } from '@tauri-apps/api/core';
+import { useState } from 'react';
 
 export default function Home() {
-  const [aiService, setAIService] = useState<AIService | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [config, setConfig] = useState<Config | null>(null);
-
-  useEffect(() => {
-    async function init() {
-      try {
-        const loadedConfig = await loadConfig();
-        setConfig(loadedConfig);
-        const service = AIServiceFactory.createService(loadedConfig['ai-service']);
-        setAIService(service);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to initialize AI service');
-        console.error('Failed to initialize AI service:', err);
-      }
-    }
-    init();
-  }, []);
+  const [aiService, _setAIService] = useState<AIService | null>(null);
+  const [error, _setError] = useState<string | null>(null);
 
   const handleQuestion = async (question: string, pdfContent?: string) => {
     if (!aiService) {
@@ -44,33 +25,22 @@ export default function Home() {
     }
   };
 
-  const handleSaveConfig = async (newConfig: Config) => {
-    try {
-      await invoke('save_config', { 
-        config: newConfig,
-        configPath: '../public/default-config.toml'
-      });
-      setConfig(newConfig);
-      const service = AIServiceFactory.createService(newConfig['ai-service']);
-      setAIService(service);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save configuration');
-      console.error('Failed to save configuration:', err);
-    }
-  };
-
   if (error) {
     return <div className="text-red-500">Error: {error}</div>;
   }
 
   return (
     <main className="p-4">
-      {config && (
-        <ConfigPanel 
-          config={config} 
-          onSave={handleSaveConfig}
-        />
-      )}
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">AI Research Assistant</h1>
+        <Link 
+          href="/settings"
+          className="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200"
+        >
+          Settings
+        </Link>
+      </div>
+      
       {aiService ? (
         <ResearchAssistant onAskQuestion={handleQuestion} />
       ) : (
