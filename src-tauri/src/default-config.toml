@@ -1,0 +1,15 @@
+[ai-service]
+provider = "ollama"
+
+[ai-service.ollama]
+baseUrl = "http://localhost:11434"
+model = "phi4"
+
+[ai-service.azure]
+baseUrl = ""
+apiKey = ""
+model = "gpt-4o"
+
+[ai-service.deepseek]
+apiKey = ""
+model = "deepseek-chat"

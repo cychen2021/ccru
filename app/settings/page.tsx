@@ -24,7 +24,7 @@ export default function Settings() {
 
   const handleSaveConfig = async (newConfig: Config) => {
     try {
-      saveConfig(newConfig, '../public/default-config.toml');
+      saveConfig(newConfig);
       setConfig(newConfig);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save configuration');

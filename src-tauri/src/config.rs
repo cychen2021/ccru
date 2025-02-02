@@ -40,15 +40,18 @@ pub struct Config {
 }
 
 #[tauri::command]
-pub fn load_config(config_path: String) -> Config {
-    let config_str = fs::read_to_string(config_path)
-        .expect("Failed to read config file");
+pub fn load_config(config_path: String, use_default_when_missing: bool) -> Config {
+    let config_str = match fs::read_to_string(&config_path) {
+        Ok(content) => content,
+        Err(_) if use_default_when_missing => {
+            include_str!("./default-config.toml").to_string()
+        },
+        Err(e) => panic!("Failed to read config file: {}", e)
+    };
     
-    let config: Config = toml::from_str(&config_str)
-        .expect("Failed to parse TOML");
-        
-    config
-} 
+    toml::from_str(&config_str)
+        .expect("Failed to parse TOML")
+}
 
 #[tauri::command]
 pub fn save_config(config: Config, config_path: String) {
