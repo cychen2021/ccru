@@ -3,26 +3,34 @@
 import Link from 'next/link';
 import { ResearchAssistant } from './components/ResearchAssistant';
 import { AIService } from './services/AIService';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { loadConfig } from './config/config';
+import { AIServiceFactory } from './services/AIServiceFactory';
 
 export default function Home() {
-  const [aiService, _setAIService] = useState<AIService | null>(null);
-  const [error, _setError] = useState<string | null>(null);
+  const [aiService, setAIService] = useState<AIService | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleQuestion = async (question: string, pdfContent?: string) => {
+  useEffect(() => {
+    async function init() {
+      try {
+        const config = await loadConfig();
+        const service = AIServiceFactory.createService(config['ai-service']);
+        setAIService(service);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to initialize AI service');
+        console.error('Failed to initialize AI service:', err);
+      }
+    }
+    init();
+  }, []);
+
+  const handleQuestion = async (question: string) => {
     if (!aiService) {
       return 'AI service not initialized';
     }
 
-    try {
-      return await aiService.askQuestion(
-        question, 
-        pdfContent ? `The following is the content of the PDF: ${pdfContent}` : undefined
-      );
-    } catch (error) {
-      console.error('Error:', error);
-      return 'Sorry, there was an error processing your question.';
-    }
+    return await aiService.askQuestion(question);
   };
 
   if (error) {
@@ -32,7 +40,7 @@ export default function Home() {
   return (
     <main className="p-4">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">AI Research Assistant</h1>
+        <h1 className="text-2xl font-bold">AI Chat</h1>
         <Link 
           href="/settings"
           className="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200"
