@@ -6,6 +6,7 @@ import { AIService } from './services/AIService';
 import { useState, useEffect } from 'react';
 import { loadConfig } from './config/config';
 import { AIServiceFactory } from './services/AIServiceFactory';
+import "./index.css";
 
 export default function Home() {
   const [aiService, setAIService] = useState<AIService | null>(null);

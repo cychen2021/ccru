@@ -37,8 +37,8 @@ export default function Settings() {
   }
 
   return (
-    <main className="p-4">
-      <div className="flex justify-between items-center mb-6">
+    <main className="p-4 min-w-[600px]">
+      <div className="flex justify-between items-center mb-6 min-w-[600px]">
         <h1 className="text-2xl font-bold">Settings</h1>
         <Link 
           href="/"

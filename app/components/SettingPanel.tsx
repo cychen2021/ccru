@@ -3,181 +3,198 @@
 import { useState } from 'react';
 import { Config } from '../config/config';
 import { AIServiceConfig } from '../config/aiServiceConfig';
-import { ConfigContents } from './SettingContents';
 
-interface ConfigPanelProps {
+interface SettingPanelProps {
   initConfig: Config;
   onSave: (config: Config) => Promise<void>;
 }
 
-export function SettingPanel({ initConfig, onSave }: ConfigPanelProps) {
-  const [currentConfig, setCurrentConfig] = useState<Config>(structuredClone(initConfig));
-  const [isEditing, setIsEditing] = useState(false);
+type TabId = 'general' | AIServiceConfig['provider'];
 
-  const handleProviderChange = (provider: AIServiceConfig['provider']) => {
-    const defaultValues = {
-      ollama: { baseUrl: 'http://localhost:11434', model: 'llama2' },
-      azure: { baseUrl: '', apiKey: '', model: 'gpt-4' },
-      deepseek: { apiKey: '', model: 'deepseek-chat' }
-    };
-    setCurrentConfig(prev => ({
+function SettingItem({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-grow justify-between gap-6 items-center w-full">
+      <label className="text-sm font-medium text-gray-700 w-[200px]">
+        {label}
+      </label>
+      <span className="w-[400px]">
+        {children}
+      </span>
+    </div>
+  );
+}
+
+export function SettingPanel({ initConfig, onSave }: SettingPanelProps) {
+  const [config, setConfig] = useState<Config>(initConfig);
+  const [selectedTab, setSelectedTab] = useState<TabId>('general');
+
+  const handleProviderSelect = (provider: AIServiceConfig['provider']) => {
+    setConfig(prev => ({
       'ai-service': {
-        provider,
-        ollama: prev['ai-service'].ollama || defaultValues.ollama,
-        azure: prev['ai-service'].azure || defaultValues.azure,
-        deepseek: prev['ai-service'].deepseek || defaultValues.deepseek,
-      } as AIServiceConfig,
+        ...prev['ai-service'],
+        provider
+      }
     }));
   };
 
-  const handleConfigChange = (key: string, value: string) => {
-    setCurrentConfig((prev) => {
-      const newAIServiceConfig = structuredClone(prev['ai-service']);
-      const provider = newAIServiceConfig.provider;
-      switch (provider) {
-        case 'ollama':
-          newAIServiceConfig.ollama = {
-            ...newAIServiceConfig.ollama!,
-            [key]: value
-          };
-          break;
-        case 'azure':
-          newAIServiceConfig.azure = {
-            ...newAIServiceConfig.azure!,
-            [key]: value
-          };
-          break;
-        case 'deepseek':
-          newAIServiceConfig.deepseek = {
-            ...newAIServiceConfig.deepseek!,
-            [key]: value
-          };
-          break;
+  const handleConfigChange = (provider: AIServiceConfig['provider'], key: string, value: string) => {
+    setConfig(prev => ({
+      'ai-service': {
+        ...prev['ai-service'],
+        [provider]: {
+          ...prev['ai-service'][provider],
+          [key]: value
+        }
       }
-      return {
-        'ai-service': newAIServiceConfig,
-      } as Config;
-    });
+    }));
   };
 
-  const renderProviderConfig = () => {
-    const { provider, ollama, azure, deepseek } = currentConfig['ai-service'];
+  const tabs: Array<{ id: TabId; label: string }> = [
+    { id: 'general', label: 'General' },
+    { id: 'ollama', label: 'Ollama' },
+    { id: 'azure', label: 'Azure' },
+    { id: 'deepseek', label: 'DeepSeek' },
+  ];
 
-    switch (provider) {
+  const renderTabContent = () => {
+    if (selectedTab === 'general') {
+      return (
+        <div className="flex flex-col gap-6">
+          <SettingItem label="Active Provider">
+            <select
+              value={config['ai-service'].provider}
+              onChange={(e) => handleProviderSelect(e.target.value as AIServiceConfig['provider'])}
+              className="w-full p-2 border rounded"
+              title="provider"
+            >
+              <option value="ollama">Ollama</option>
+              <option value="azure">Azure</option>
+              <option value="deepseek">DeepSeek</option>
+            </select>
+          </SettingItem>
+        </div>
+      );
+    }
+
+    switch (selectedTab) {
       case 'ollama':
         return (
-          <>
-            <input
-              type="text"
-              defaultValue={ollama?.baseUrl || ''}
-              onChange={e => handleConfigChange('baseUrl', e.target.value)}
-              placeholder="Base URL"
-              className="p-2 border rounded"
-            />
-            <input
-              type="text"
-              defaultValue={ollama?.model || ''}
-              onChange={e => handleConfigChange('model', e.target.value)}
-              placeholder="Model"
-              className="p-2 border rounded"
-            />
-          </>
+          <div className="flex flex-col gap-6 w-full">
+            <SettingItem label="Base URL">
+              <input
+                type="text"
+                value={config['ai-service'].ollama?.baseUrl || ''}
+                onChange={e => handleConfigChange('ollama', 'baseUrl', e.target.value)}
+                placeholder="http://localhost:11434"
+                className="w-full p-2 border rounded width-[10px]"
+              />
+            </SettingItem>
+            <SettingItem label="Model">
+              <input
+                type="text"
+                value={config['ai-service'].ollama?.model || ''}
+                onChange={e => handleConfigChange('ollama', 'model', e.target.value)}
+                placeholder="llama2"
+                className="w-full p-2 border rounded"
+              />
+            </SettingItem>
+          </div>
         );
-
       case 'azure':
         return (
-          <>
-            <input
-              type="text"
-              defaultValue={azure?.baseUrl || ''}
-              onChange={e => handleConfigChange('baseUrl', e.target.value)}
-              placeholder="Base URL"
-              className="p-2 border rounded"
-            />
-            <input
-              type="password"
-              defaultValue={azure?.apiKey || ''}
-              onChange={e => handleConfigChange('apiKey', e.target.value)}
-              placeholder="API Key"
-              className="p-2 border rounded"
-            />
-            <input
-              type="text"
-              defaultValue={azure?.model || ''}
-              onChange={e => handleConfigChange('model', e.target.value)}
-              placeholder="Model"
-              className="p-2 border rounded"
-            />
-          </>
+          <div className="flex flex-col gap-6">
+            <SettingItem label="Base URL">
+              <input
+                type="text"
+                value={config['ai-service'].azure?.baseUrl || ''}
+                onChange={e => handleConfigChange('azure', 'baseUrl', e.target.value)}
+                placeholder="https://your-resource.openai.azure.com"
+                className="w-full p-2 border rounded"
+              />
+            </SettingItem>
+            <SettingItem label="API Key">
+              <input
+                type="password"
+                value={config['ai-service'].azure?.apiKey || ''}
+                onChange={e => handleConfigChange('azure', 'apiKey', e.target.value)}
+                placeholder="Enter your API key"
+                className="w-full p-2 border rounded"
+              />
+            </SettingItem>
+            <SettingItem label="Model">
+              <input
+                type="text"
+                value={config['ai-service'].azure?.model || ''}
+                onChange={e => handleConfigChange('azure', 'model', e.target.value)}
+                placeholder="gpt-4"
+                className="w-full p-2 border rounded"
+              />
+            </SettingItem>
+          </div>
         );
-
       case 'deepseek':
         return (
-          <>
-            <input
-              type="password"
-              defaultValue={deepseek?.apiKey || ''}
-              onChange={e => handleConfigChange('apiKey', e.target.value)}
-              placeholder="API Key"
-              className="p-2 border rounded"
-            />
-            <input
-              type="text"
-              defaultValue={deepseek?.model || ''}
-              onChange={e => handleConfigChange('model', e.target.value)}
-              placeholder="Model"
-              className="p-2 border rounded"
-            />
-          </>
+          <div className="flex flex-col gap-6">
+            <SettingItem label="API Key">
+              <input
+                type="password"
+                value={config['ai-service'].deepseek?.apiKey || ''}
+                onChange={e => handleConfigChange('deepseek', 'apiKey', e.target.value)}
+                placeholder="Enter your API key"
+                className="w-full p-2 border rounded"
+              />
+            </SettingItem>
+            <SettingItem label="Model">
+              <input
+                type="text"
+                value={config['ai-service'].deepseek?.model || ''}
+                onChange={e => handleConfigChange('deepseek', 'model', e.target.value)}
+                placeholder="deepseek-chat"
+                className="w-full p-2 border rounded"
+              />
+            </SettingItem>
+          </div>
         );
     }
   };
 
   return (
-    <div className="p-4 bg-white rounded-lg shadow">
-      <div className="flex justify-between mb-4">
-        <h2 className="text-xl font-bold">AI Service Configuration</h2>
-        <button
-          onClick={() => setIsEditing(!isEditing)}
-          className="px-4 py-2 bg-blue-500 text-white rounded"
-        >
-          {isEditing ? 'Cancel' : 'Edit'}
-        </button>
+    <div className="space-y-6 min-w-[600px]">
+      <div className="border-b border-gray-200">
+        <div className="flex">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setSelectedTab(tab.id)}
+              className={`py-2 px-4 border-b-2 -mb-px ${
+                selectedTab === tab.id
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent hover:border-gray-300'
+              }`}
+            >
+              {tab.label}
+              {tab.id !== 'general' && config['ai-service'].provider === tab.id && 
+                <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                  Active
+                </span>
+              }
+            </button>
+          ))}
+        </div>
       </div>
 
-      {isEditing ? (
-        <div className="space-y-4">
-          <select
-            aria-label="AI Service Provider"
-            value={currentConfig['ai-service']?.provider || ''}
-            onChange={e => handleProviderChange(e.target.value as AIServiceConfig['provider'])}
-            className="w-full p-2 border rounded"
-          >
-            <option value="ollama">Ollama</option>
-            <option value="azure">Azure</option>
-            <option value="deepseek">DeepSeek</option>
-          </select>
+      <div className="p-4 border rounded w-full">
+        {renderTabContent()}
+      </div>
 
-          <div className="space-y-2">
-            {renderProviderConfig()}
-          </div>
-
-          <button
-            onClick={async () => {
-              await onSave(currentConfig);
-              setIsEditing(false);
-            }}
-            className="px-4 py-2 bg-green-500 text-white rounded"
-          >
-            Save
-          </button>
-        </div>
-      ) : (
-        <ConfigContents 
-          config={currentConfig} 
-          onProviderChange={handleProviderChange}
-        />
-      )}
+      <div className="flex justify-end">
+        <button
+          onClick={() => onSave(config)}
+          className="w-[200px] px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Save Settings
+        </button>
+      </div>
     </div>
   );
 } 
