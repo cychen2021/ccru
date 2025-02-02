@@ -19,11 +19,22 @@ export async function loadConfig(): Promise<Config> {
   for (let i = 0; i < candidateConfigPaths.length; i++) {
     const configPath = candidateConfigPaths[i];
     const useDefaultWhenMissing = i === candidateConfigPaths.length - 1;
-    const config = await invoke('load_config', { configPath: configPath, useDefaultWhenMissing }) as Config;
-    if (config) {
-      return config;
+    const load_config_response = await invoke('load_config', { configPath: configPath, useDefaultWhenMissing }) as {
+      config: Config;
+      usingDefault: boolean;
+    };
+    if (load_config_response) {
+      if (load_config_response.usingDefault) {
+        console.log('Using default config');
+        invoke('save_config', { config: load_config_response.config, configPath: candidateConfigPaths[0] });
+      }
+
+      return load_config_response.config;
     }
+
+
   }
+
   throw new Error('Should not happen');
 }
 

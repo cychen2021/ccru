@@ -39,18 +39,32 @@ pub struct Config {
     ai_service: AIService,
 }
 
+#[derive(Deserialize, Serialize)]
+pub struct LoadConfigResponse {
+    config: Config,
+    using_default: bool,
+}
+
 #[tauri::command]
-pub fn load_config(config_path: String, use_default_when_missing: bool) -> Config {
+pub fn load_config(config_path: String, use_default_when_missing: bool) -> LoadConfigResponse {
+    let mut using_default = false;
     let config_str = match fs::read_to_string(&config_path) {
         Ok(content) => content,
         Err(_) if use_default_when_missing => {
-            include_str!("../assets/default-config.toml").to_string()
+            include_str!("../assets/default-config.toml").to_string();
+            using_default = true;
         },
         Err(e) => panic!("Failed to read config file: {}", e)
     };
     
-    toml::from_str(&config_str)
-        .expect("Failed to parse TOML")
+    let c = toml::from_str(&config_str)
+        .expect("Failed to parse TOML");
+
+    LoadConfigResponse {
+        config: c,
+        using_default,
+    }
+
 }
 
 #[tauri::command]
