@@ -1,4 +1,4 @@
-# Lichee RA
+# CCRU, CCY's Cybernetic Recurrent Unit
 
 ## TODOs
 
