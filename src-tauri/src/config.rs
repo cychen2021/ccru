@@ -44,7 +44,7 @@ pub fn load_config(config_path: String, use_default_when_missing: bool) -> Confi
     let config_str = match fs::read_to_string(&config_path) {
         Ok(content) => content,
         Err(_) if use_default_when_missing => {
-            include_str!("./default-config.toml").to_string()
+            include_str!("../assets/default-config.toml").to_string()
         },
         Err(e) => panic!("Failed to read config file: {}", e)
     };
