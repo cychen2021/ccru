@@ -31,8 +31,6 @@ export async function loadConfig(): Promise<Config> {
 
       return load_config_response.config;
     }
-
-
   }
 
   throw new Error('Should not happen');
