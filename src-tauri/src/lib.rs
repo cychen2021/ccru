@@ -1,10 +1,18 @@
 mod config;
 mod llm_bridge;
+mod chat;
+
+use std::sync::Mutex;
+use std::sync::Arc;
+use crate::config::Config;
+use crate::llm_bridge::LLMBridge;
+use crate::chat::ChatHistory;
 
 #[derive(Default)]
 struct AppState {
   config: Option<Config>,
   llm_bridge: Option<Arc<dyn LLMBridge>>,
+  chat_history: Option<Arc<ChatHistory>>,
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -22,7 +30,11 @@ pub fn run() {
       }
       Ok(())
     })
-    .invoke_handler(tauri::generate_handler![config::load_config, config::save_config])
+    .invoke_handler(tauri::generate_handler![
+      config::load_config, 
+      config::save_config,
+      llm_bridge::get_completion,
+    ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }

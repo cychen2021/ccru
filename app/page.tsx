@@ -2,22 +2,20 @@
 
 import Link from 'next/link';
 import { ResearchAssistant } from './components/ResearchAssistant';
-import { AIService } from './services/AIService';
+import { aiService } from './services/AIService';
 import { useState, useEffect } from 'react';
 import { loadConfig } from './config/config';
-import { AIServiceFactory } from './services/AIServiceFactory';
 import "./index.css";
 
+
+
 export default function Home() {
-  const [aiService, setAIService] = useState<AIService | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function init() {
       try {
-        const config = await loadConfig();
-        const service = AIServiceFactory.createService(config['ai-service']);
-        setAIService(service);
+        await loadConfig();
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to initialize AI service');
         console.error('Failed to initialize AI service:', err);
@@ -31,7 +29,7 @@ export default function Home() {
       return 'AI service not initialized';
     }
 
-    return await aiService.askQuestion(question);
+    return await aiService.get_completion([question]);
   };
 
   if (error) {

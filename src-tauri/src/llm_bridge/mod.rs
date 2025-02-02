@@ -29,3 +29,6 @@ pub trait LLMBridge: Send + Sync {
     async fn complete(&self, request: LLMRequest) -> Result<LLMResponse, Box<dyn std::error::Error + Send + Sync>>;
     async fn health_check(&self) -> Result<bool, Box<dyn std::error::Error + Send + Sync>>;
 }
+
+mod commands;
+pub use commands::*;

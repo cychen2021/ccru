@@ -48,7 +48,6 @@ React/Next.js
 - Use function, not const, for components.
 - Use Shadcn UI, Radix, and Tailwind Aria for components and styling.
 - Implement responsive design with Tailwind CSS.
-- Use mobile-first approach for responsive design.
 - Place static content and interfaces at file end.
 - Use content variables for static content outside render functions.
 - Minimize 'use client', 'useEffect', and 'setState'. Favor RSC.
@@ -71,8 +70,8 @@ React/Next.js
 
 Frontend and Backend
 
-- Utilize Tauri's APIs for native desktop integration (file system access, system tray, etc.).
-- Utilize Tauri's API for communication between the TypeScript frontend and the Rust backend.
+- Utilize Tauri 2.0 APIs for native desktop integration (file system access, system tray, etc.).
+- Use Tauri 2.0 APIs (e.g., `invoke` in the frontend and `tauri::command` in the backend) for frontend-backend communication.
 - Implement proper error handling for network requests and responses.
 - Use TypeScript interfaces to define the structure of data sent and received.
 - Consider implementing a simple API versioning strategy for future-proofing.
