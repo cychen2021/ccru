@@ -24,3 +24,5 @@ log = "0.4"
 tauri = { version = "2.2.4", features = [] }
 tauri-plugin-log = "2.0.0-rc"
 toml = "0.8.19"
+async-trait = "0.1.86"
+reqwest = "0.12.12"
