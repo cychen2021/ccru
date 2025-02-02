@@ -13,7 +13,7 @@ pub fn run() {
       }
       Ok(())
     })
-    .invoke_handler(tauri::generate_handler![config::load_config])
+    .invoke_handler(tauri::generate_handler![config::load_config, config::save_config])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }
