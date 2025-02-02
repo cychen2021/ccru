@@ -46,7 +46,7 @@ pub struct LoadConfigResponse {
 }
 
 #[tauri::command]
-pub fn load_config(config_path: String, use_default_when_missing: bool) -> LoadConfigResponse {
+pub fn load_config(app_state: tauri::State<AppState>, config_path: String, use_default_when_missing: bool) -> LoadConfigResponse {
     let mut using_default = false;
     let config_str = match fs::read_to_string(&config_path) {
         Ok(content) => content,
@@ -60,10 +60,27 @@ pub fn load_config(config_path: String, use_default_when_missing: bool) -> LoadC
     let c = toml::from_str(&config_str)
         .expect("Failed to parse TOML");
 
+    let mut app_state = app_state.lock().unwrap();
+    app_state.config = Some(c);
+    match config.ai_service.provider.as_str() {
+        "ollama" => {
+            app_state.llm_bridge = Some(Arc::new(OllamaBridge::new(config.ai_service.ollama.unwrap())));
+        },
+        "azure" => {
+            app_state.llm_bridge = Some(Arc::new(AzureBridge::new(config.ai_service.azure.unwrap())));
+        },
+        "deepseek" => {
+            app_state.llm_bridge = Some(Arc::new(DeepSeekBridge::new(config.ai_service.deepseek.unwrap())));
+        },
+        _ => panic!("Unsupported AI service provider"),
+    }
+
+
     LoadConfigResponse {
         config: c,
         using_default,
     }
+
 
 }
 
