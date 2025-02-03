@@ -1,0 +1,9 @@
+{
+    "recommendations": [
+        "Swellaby.rust-pack",
+        "loiane.ts-extension-pack",
+        "bradlc.vscode-tailwindcss",
+        "csstools.postcss",
+        "tauri-apps.tauri-vscode"
+    ]
+}
