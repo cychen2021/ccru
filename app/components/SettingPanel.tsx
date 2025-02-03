@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Config } from '../config/config';
+import { Config, canonicalizeProvider } from '../config/config';
 import { AIServiceConfig } from '../config/aiServiceConfig';
 
 interface SettingPanelProps {
@@ -26,6 +26,7 @@ function SettingItem({ label, children }: { label: string; children: React.React
 
 export function SettingPanel({ initConfig, onSave }: SettingPanelProps) {
   const [config, setConfig] = useState<Config>(initConfig);
+
   const [selectedTab, setSelectedTab] = useState<TabId>('general');
 
   const handleProviderSelect = (provider: AIServiceConfig['provider']) => {
@@ -38,11 +39,12 @@ export function SettingPanel({ initConfig, onSave }: SettingPanelProps) {
   };
 
   const handleConfigChange = (provider: AIServiceConfig['provider'], key: string, value: string) => {
+    const canonicalizedProvider = canonicalizeProvider(provider);
     setConfig(prev => ({
       'ai-service': {
         ...prev['ai-service'],
-        [provider]: {
-          ...prev['ai-service'][provider],
+        [canonicalizedProvider]: {
+          ...prev['ai-service'][canonicalizedProvider],
           [key]: value
         }
       }
@@ -54,6 +56,7 @@ export function SettingPanel({ initConfig, onSave }: SettingPanelProps) {
     { id: 'ollama', label: 'Ollama' },
     { id: 'azure', label: 'Azure' },
     { id: 'deepseek', label: 'DeepSeek' },
+    { id: 'azure-deepseek', label: 'Azure DeepSeek' },
   ];
 
   const renderTabContent = () => {
@@ -70,6 +73,7 @@ export function SettingPanel({ initConfig, onSave }: SettingPanelProps) {
               <option value="ollama">Ollama</option>
               <option value="azure">Azure</option>
               <option value="deepseek">DeepSeek</option>
+              <option value="azure-deepseek">Azure DeepSeek</option>
             </select>
           </SettingItem>
         </div>
@@ -150,6 +154,29 @@ export function SettingPanel({ initConfig, onSave }: SettingPanelProps) {
                 value={config['ai-service'].deepseek?.model || ''}
                 onChange={e => handleConfigChange('deepseek', 'model', e.target.value)}
                 placeholder="deepseek-chat"
+                className="w-full p-2 border rounded"
+              />
+            </SettingItem>
+          </div>
+        );
+      case 'azure-deepseek':
+        return (
+          <div className="flex flex-col gap-6">
+            <SettingItem label="Base URL">
+              <input
+                type="text"
+                value={config['ai-service'].azureDeepSeek?.baseUrl || ''}
+                onChange={e => handleConfigChange('azure-deepseek', 'baseUrl', e.target.value)}
+                placeholder="Enter your Azure endpoint URL"
+                className="w-full p-2 border rounded"
+              />
+            </SettingItem>
+            <SettingItem label="API Key">
+              <input
+                type="password"
+                value={config['ai-service'].azureDeepSeek?.apiKey || ''}
+                onChange={e => handleConfigChange('azure-deepseek', 'apiKey', e.target.value)}
+                placeholder="Enter your Azure API key"
                 className="w-full p-2 border rounded"
               />
             </SettingItem>

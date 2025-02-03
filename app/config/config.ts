@@ -14,13 +14,26 @@ async function configPaths(): Promise<string[]> {
   ];
 }
 
+function convertConfigJson(config_json: any): Config {
+  return {
+    'ai-service': {
+      provider: config_json['ai-service'].provider,
+      ollama: config_json['ai-service'].ollama,
+      azure: config_json['ai-service'].azure,
+      deepseek: config_json['ai-service'].deepseek,
+      azureDeepSeek: config_json['ai-service']['azure-deepseek'],
+    }
+  }
+}
+
+
 export async function loadConfig(): Promise<Config> {
   const candidateConfigPaths = await configPaths();
   for (let i = 0; i < candidateConfigPaths.length; i++) {
     const configPath = candidateConfigPaths[i];
     const useDefaultWhenMissing = i === candidateConfigPaths.length - 1;
     const load_config_response = await invoke('load_config', { configPath: configPath, useDefaultWhenMissing }) as {
-      config: Config;
+      config: any;
       usingDefault: boolean;
     };
     if (load_config_response) {
@@ -29,12 +42,29 @@ export async function loadConfig(): Promise<Config> {
         invoke('save_config', { config: load_config_response.config, configPath: candidateConfigPaths[0] });
       }
 
-      return load_config_response.config;
+      return convertConfigJson(load_config_response.config);
     }
   }
 
   throw new Error('Should not happen');
 }
+
+export function canonicalizeProvider(provider: AIServiceConfig['provider']): 'ollama' | 'azure' | 'deepseek' | 'azureDeepSeek' {
+  switch (provider) {
+    case 'ollama':
+      return 'ollama';
+    case 'azure':
+      return 'azure';
+    case 'deepseek':
+      return 'deepseek';
+    case 'azure-deepseek':
+      return 'azureDeepSeek';
+    default:
+      throw new Error(`Unsupported provider: ${provider}`);
+  }
+}
+
+
 
 export async function saveConfig(config: Config): Promise<void> {
   const candidateConfigPaths = await configPaths();
@@ -42,5 +72,6 @@ export async function saveConfig(config: Config): Promise<void> {
     throw new Error('Should not happen');
   }
   const configPath = candidateConfigPaths[0];
+  console.log(`${JSON.stringify(config)}`);
   await invoke('save_config', { config: config, configPath: configPath });
 }

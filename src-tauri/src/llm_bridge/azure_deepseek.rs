@@ -36,12 +36,13 @@ struct Choice {
 }
 
 impl AzureDeepSeekBridge {
-    pub fn new(base_url: String, model: String, api_key: String) -> Self {
+    pub fn new(base_url: &str, model: &str, api_key: &str) -> Self {
         Self {
-            base_url,
-            model,
-            api_key,
+            base_url: base_url.to_string(),
+            model: model.to_string(),
+            api_key: api_key.to_string(),
             client: Client::new(),
+
         }
     }
 

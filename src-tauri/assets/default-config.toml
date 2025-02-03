@@ -13,3 +13,7 @@ model = "gpt-4o"
 [ai-service.deepseek]
 apiKey = ""
 model = "deepseek-chat"
+
+[ai-service.azure-deepseek]
+apiKey = ""
+baseUrl = ""

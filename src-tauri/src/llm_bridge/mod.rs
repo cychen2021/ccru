@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 pub use azure::*;
 pub use deepseek::*;
 pub use ollama::*;
+pub use azure_deepseek::*;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LLMResponse {

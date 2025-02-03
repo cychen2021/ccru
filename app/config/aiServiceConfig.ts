@@ -14,9 +14,16 @@ export interface DeepSeekConfig {
   model: string;
 }
 
+export interface AzureDeepSeekConfig {
+  apiKey: string;
+  baseUrl: string;
+}
+
 export type AIServiceConfig = {
-  provider: 'ollama' | 'azure' | 'deepseek';
+  provider: 'ollama' | 'azure' | 'deepseek' | 'azure-deepseek';
+
   ollama?: OllamaConfig;
   azure?: AzureConfig;
   deepseek?: DeepSeekConfig;
+  azureDeepSeek?: AzureDeepSeekConfig;
 }

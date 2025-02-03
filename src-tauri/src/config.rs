@@ -1,4 +1,4 @@
-use crate::llm_bridge::{AzureBridge, DeepSeekBridge, OllamaBridge};
+use crate::llm_bridge::{AzureBridge, DeepSeekBridge, OllamaBridge, AzureDeepSeekBridge};
 use crate::AppState;
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -7,7 +7,7 @@ use tokio::sync::Mutex;
 use toml;
 use std::path::Path;
 
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 
 pub struct OllamaConfig {
     #[serde(rename = "baseUrl")]
@@ -15,7 +15,7 @@ pub struct OllamaConfig {
     model: String,
 }
 
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct AzureConfig {
     #[serde(rename = "baseUrl")]
     base_url: String,
@@ -24,26 +24,38 @@ pub struct AzureConfig {
     model: String,
 }
 
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct DeepSeekConfig {
     #[serde(rename = "apiKey")]
     api_key: String,
     model: String,
 }
 
-#[derive(Deserialize, Serialize, Clone)]
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct AIService {
     provider: String,
     ollama: Option<OllamaConfig>,
     azure: Option<AzureConfig>,
     deepseek: Option<DeepSeekConfig>,
+    #[serde(rename = "azure-deepseek", alias = "azureDeepSeek")]
+    azure_deepseek: Option<AzureDeepSeekConfig>,
 }
 
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Config {
     #[serde(rename = "ai-service")]
     ai_service: AIService,
 }
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct AzureDeepSeekConfig {
+    #[serde(rename = "apiKey")]
+    pub api_key: String,
+    #[serde(rename = "baseUrl")]
+    pub base_url: String,
+}
+
 
 #[derive(Deserialize, Serialize, Clone)]
 pub struct LoadConfigResponse {
@@ -93,8 +105,16 @@ pub async fn load_config(
                 &config.ai_service.deepseek.as_ref().unwrap().model,
             )));
         }
+        "azure-deepseek" => {
+            app_state.llm_bridge = Some(Arc::new(AzureDeepSeekBridge::new(
+                &config.ai_service.azure_deepseek.as_ref().unwrap().api_key,
+                &config.ai_service.azure_deepseek.as_ref().unwrap().base_url,
+                "DeepSeek-R1"
+            )));
+        }
         _ => panic!("Unsupported AI service provider"),
     }
+
 
     Ok(LoadConfigResponse {
         config: config,
