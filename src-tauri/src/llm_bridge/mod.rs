@@ -1,10 +1,14 @@
-mod ollama;
 mod azure;
 mod azure_deepseek;
 mod deepseek;
+mod ollama;
 
-use serde::{Deserialize, Serialize};
 use async_trait::async_trait;
+use serde::{Deserialize, Serialize};
+
+pub use azure::*;
+pub use deepseek::*;
+pub use ollama::*;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LLMResponse {
@@ -22,12 +26,25 @@ pub struct LLMRequest {
     pub messages: Vec<Prompt>,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct LLMServiceError {
+    pub error: String,
+}
+
+impl std::error::Error for LLMServiceError {}
+
+impl std::fmt::Display for LLMServiceError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.error)
+    }
+}
+
 #[async_trait]
 pub trait LLMBridge: Send + Sync {
     fn name(&self) -> &str;
     fn model(&self) -> &str;
-    async fn complete(&self, request: LLMRequest) -> Result<LLMResponse, Box<dyn std::error::Error + Send + Sync>>;
-    async fn health_check(&self) -> Result<bool, Box<dyn std::error::Error + Send + Sync>>;
+    async fn complete(&self, request: LLMRequest) -> Result<LLMResponse, LLMServiceError>;
+    async fn health_check(&self) -> Result<bool, LLMServiceError>;
 }
 
 mod commands;

@@ -103,6 +103,7 @@ dependencies = [
  "tauri",
  "tauri-build",
  "tauri-plugin-log",
+ "tokio",
  "toml 0.8.19",
  "uuid",
 ]

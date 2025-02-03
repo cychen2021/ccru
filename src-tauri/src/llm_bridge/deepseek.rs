@@ -1,7 +1,8 @@
+use super::LLMServiceError;
 use super::{LLMBridge, LLMRequest, LLMResponse, Prompt};
 use async_trait::async_trait;
-use serde::{Deserialize, Serialize};
 use reqwest::Client;
+use serde::{Deserialize, Serialize};
 
 pub struct DeepSeekBridge {
     api_key: String,
@@ -35,16 +36,17 @@ struct Choice {
 }
 
 impl DeepSeekBridge {
-    pub fn new(api_key: String, model: String) -> Self {
+    pub fn new(api_key: &str, model: &str) -> Self {
         Self {
-            api_key,
-            model,
+            api_key: api_key.to_string(),
+            model: model.to_string(),
             client: Client::new(),
         }
     }
 
     fn convert_prompts(prompts: Vec<Prompt>) -> Vec<ChatMessage> {
-        prompts.into_iter()
+        prompts
+            .into_iter()
             .map(|p| ChatMessage {
                 role: p.role,
                 content: p.content,
@@ -63,7 +65,7 @@ impl LLMBridge for DeepSeekBridge {
         &self.model
     }
 
-    async fn complete(&self, request: LLMRequest) -> Result<LLMResponse, Box<dyn std::error::Error + Send + Sync>> {
+    async fn complete(&self, request: LLMRequest) -> Result<LLMResponse, LLMServiceError> {
         let deepseek_req = DeepSeekRequest {
             model: self.model.clone(),
             messages: Self::convert_prompts(request.messages),
@@ -72,22 +74,38 @@ impl LLMBridge for DeepSeekBridge {
             stream: false,
         };
 
-        let response = self.client
+        let response = self
+            .client
             .post("https://api.deepseek.com/v1/chat/completions")
             .header("Authorization", format!("Bearer {}", self.api_key))
             .json(&deepseek_req)
             .send()
-            .await?;
+            .await
+            .map_err(|e| LLMServiceError {
+                error: format!("DeepSeek request failed: {}", e),
+            })?;
 
         if !response.status().is_success() {
-            let error_text = response.text().await?;
-            return Err(format!("DeepSeek API error: {} - {}", response.status(), error_text).into());
+            let status = response.status();
+            let error_text = response.text().await.map_err(|e| LLMServiceError {
+                error: format!("Failed to read error response: {}", e),
+            })?;
+            return Err(LLMServiceError {
+                error: format!("DeepSeek API error: {} - {}", status, error_text),
+            });
         }
 
-        let deepseek_resp: DeepSeekResponse = response.json().await?;
-        let content = deepseek_resp.choices
+        let deepseek_resp: DeepSeekResponse =
+            response.json().await.map_err(|e| LLMServiceError {
+                error: format!("Failed to parse DeepSeek response: {}", e),
+            })?;
+
+        let content = deepseek_resp
+            .choices
             .first()
-            .ok_or("No completion choices returned")?
+            .ok_or_else(|| LLMServiceError {
+                error: "No completion choices returned".to_string(),
+            })?
             .message
             .content
             .clone();
@@ -95,7 +113,7 @@ impl LLMBridge for DeepSeekBridge {
         Ok(LLMResponse { content })
     }
 
-    async fn health_check(&self) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
+    async fn health_check(&self) -> Result<bool, LLMServiceError> {
         let deepseek_req = DeepSeekRequest {
             model: self.model.clone(),
             messages: vec![ChatMessage {
@@ -107,13 +125,17 @@ impl LLMBridge for DeepSeekBridge {
             stream: false,
         };
 
-        let response = self.client
+        let response = self
+            .client
             .post("https://api.deepseek.com/v1/chat/completions")
             .header("Authorization", format!("Bearer {}", self.api_key))
             .json(&deepseek_req)
             .send()
-            .await?;
+            .await
+            .map_err(|e| LLMServiceError {
+                error: format!("Health check failed: {}", e),
+            })?;
 
         Ok(response.status().is_success())
     }
-} 
+}

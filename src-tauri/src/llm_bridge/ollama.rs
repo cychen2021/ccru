@@ -1,7 +1,8 @@
+use super::LLMServiceError;
 use super::{LLMBridge, LLMRequest, LLMResponse, Prompt};
 use async_trait::async_trait;
-use serde::{Deserialize, Serialize};
 use reqwest::Client;
+use serde::{Deserialize, Serialize};
 
 pub struct OllamaBridge {
     base_url: String,
@@ -22,16 +23,17 @@ struct OllamaResponse {
 }
 
 impl OllamaBridge {
-    pub fn new(base_url: String, model: String) -> Self {
+    pub fn new(base_url: &str, model: &str) -> Self {
         Self {
-            base_url,
-            model,
+            base_url: base_url.to_string(),
+            model: model.to_string(),
             client: Client::new(),
         }
     }
 
     fn format_prompts(prompts: Vec<Prompt>) -> String {
-        prompts.into_iter()
+        prompts
+            .into_iter()
             .map(|p| format!("{}: {}", p.role, p.content))
             .collect::<Vec<_>>()
             .join("\n")
@@ -48,37 +50,52 @@ impl LLMBridge for OllamaBridge {
         &self.model
     }
 
-    async fn complete(&self, request: LLMRequest) -> Result<LLMResponse, Box<dyn std::error::Error + Send + Sync>> {
+    async fn complete(&self, request: LLMRequest) -> Result<LLMResponse, LLMServiceError> {
         let ollama_req = OllamaRequest {
             model: self.model.clone(),
             prompt: Self::format_prompts(request.messages),
             stream: false,
         };
 
-        let response = self.client
+        let response = self
+            .client
             .post(format!("{}/api/generate", self.base_url))
             .json(&ollama_req)
             .send()
-            .await?;
+            .await
+            .map_err(|e| LLMServiceError {
+                error: format!("Ollama request failed: {}", e),
+            })?;
 
         if !response.status().is_success() {
-            let error_text = response.text().await?;
-            return Err(format!("Ollama API error: {} - {}", response.status(), error_text).into());
+            let status = response.status();
+            let error_text = response.text().await.map_err(|e| LLMServiceError {
+                error: format!("Failed to read error response: {}", e),
+            })?;
+            return Err(LLMServiceError {
+                error: format!("Ollama API error: {} - {}", status, error_text),
+            });
         }
 
-        let ollama_resp: OllamaResponse = response.json().await?;
-        
+        let ollama_resp: OllamaResponse = response.json().await.map_err(|e| LLMServiceError {
+            error: format!("Failed to parse Ollama response: {}", e),
+        })?;
+
         Ok(LLMResponse {
             content: ollama_resp.response,
         })
     }
 
-    async fn health_check(&self) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
-        let response = self.client
+    async fn health_check(&self) -> Result<bool, LLMServiceError> {
+        let response = self
+            .client
             .get(format!("{}/api/version", self.base_url))
             .send()
-            .await?;
-        
+            .await
+            .map_err(|e| LLMServiceError {
+                error: format!("Health check failed: {}", e),
+            })?;
+
         Ok(response.status().is_success())
     }
-} 
+}

@@ -1,15 +1,19 @@
+use crate::llm_bridge::{AzureBridge, DeepSeekBridge, OllamaBridge};
+use crate::AppState;
 use serde::{Deserialize, Serialize};
-use toml;
 use std::fs;
+use std::sync::{Arc, Mutex};
+use toml;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
+
 pub struct OllamaConfig {
     #[serde(rename = "baseUrl")]
     base_url: String,
     model: String,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct AzureConfig {
     #[serde(rename = "baseUrl")]
     base_url: String,
@@ -18,14 +22,14 @@ pub struct AzureConfig {
     model: String,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct DeepSeekConfig {
     #[serde(rename = "apiKey")]
     api_key: String,
     model: String,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct AIService {
     provider: String,
     ollama: Option<OllamaConfig>,
@@ -33,63 +37,71 @@ pub struct AIService {
     deepseek: Option<DeepSeekConfig>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct Config {
     #[serde(rename = "ai-service")]
     ai_service: AIService,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct LoadConfigResponse {
     config: Config,
     using_default: bool,
 }
 
 #[tauri::command]
-pub fn load_config(app_state: tauri::State<AppState>, config_path: String, use_default_when_missing: bool) -> LoadConfigResponse {
+pub fn load_config(
+    app_state: tauri::State<Mutex<AppState>>,
+    config_path: String,
+    use_default_when_missing: bool,
+) -> LoadConfigResponse {
     let mut using_default = false;
     let config_str = match fs::read_to_string(&config_path) {
         Ok(content) => content,
         Err(_) if use_default_when_missing => {
-            include_str!("../assets/default-config.toml").to_string();
+            let t = include_str!("../assets/default-config.toml").to_string();
             using_default = true;
-        },
-        Err(e) => panic!("Failed to read config file: {}", e)
+            t
+        }
+        Err(e) => panic!("Failed to read config file: {}", e),
     };
-    
-    let c = toml::from_str(&config_str)
-        .expect("Failed to parse TOML");
+
+    let config: Config = toml::from_str(&config_str).expect("Failed to parse TOML");
 
     let mut app_state = app_state.lock().unwrap();
-    app_state.config = Some(c);
+    app_state.config = Some(config.clone());
     match config.ai_service.provider.as_str() {
         "ollama" => {
-            app_state.llm_bridge = Some(Arc::new(OllamaBridge::new(config.ai_service.ollama.unwrap())));
-        },
+            app_state.llm_bridge = Some(Arc::new(OllamaBridge::new(
+                &config.ai_service.ollama.as_ref().unwrap().base_url,
+                &config.ai_service.ollama.as_ref().unwrap().model,
+            )));
+        }
         "azure" => {
-            app_state.llm_bridge = Some(Arc::new(AzureBridge::new(config.ai_service.azure.unwrap())));
-        },
+            app_state.llm_bridge = Some(Arc::new(AzureBridge::new(
+                &config.ai_service.azure.as_ref().unwrap().base_url,
+                &config.ai_service.azure.as_ref().unwrap().model,
+                &config.ai_service.azure.as_ref().unwrap().api_key,
+            )));
+        }
         "deepseek" => {
-            app_state.llm_bridge = Some(Arc::new(DeepSeekBridge::new(config.ai_service.deepseek.unwrap())));
-        },
+            app_state.llm_bridge = Some(Arc::new(DeepSeekBridge::new(
+                &config.ai_service.deepseek.as_ref().unwrap().api_key,
+                &config.ai_service.deepseek.as_ref().unwrap().model,
+            )));
+        }
         _ => panic!("Unsupported AI service provider"),
     }
 
-
     LoadConfigResponse {
-        config: c,
+        config: config,
         using_default,
     }
-
-
 }
 
 #[tauri::command]
 pub fn save_config(config: Config, config_path: String) {
-    let config_str = toml::to_string(&config)
-        .expect("Failed to serialize config to TOML");
-    
-    fs::write(config_path, config_str)
-        .expect("Failed to write config file");
-}
+    let config_str = toml::to_string(&config).expect("Failed to serialize config to TOML");
 
+    fs::write(config_path, config_str).expect("Failed to write config file");
+}

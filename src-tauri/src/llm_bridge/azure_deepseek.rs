@@ -1,7 +1,8 @@
+use super::LLMServiceError;
 use super::{LLMBridge, LLMRequest, LLMResponse, Prompt};
 use async_trait::async_trait;
-use serde::{Deserialize, Serialize};
 use reqwest::Client;
+use serde::{Deserialize, Serialize};
 
 pub struct AzureDeepSeekBridge {
     base_url: String,
@@ -45,7 +46,8 @@ impl AzureDeepSeekBridge {
     }
 
     fn convert_prompts(prompts: Vec<Prompt>) -> Vec<ChatMessage> {
-        prompts.into_iter()
+        prompts
+            .into_iter()
             .map(|p| ChatMessage {
                 role: p.role,
                 content: p.content,
@@ -64,7 +66,7 @@ impl LLMBridge for AzureDeepSeekBridge {
         &self.model
     }
 
-    async fn complete(&self, request: LLMRequest) -> Result<LLMResponse, Box<dyn std::error::Error + Send + Sync>> {
+    async fn complete(&self, request: LLMRequest) -> Result<LLMResponse, LLMServiceError> {
         let deepseek_req = DeepSeekRequest {
             messages: Self::convert_prompts(request.messages),
             temperature: 0.7,
@@ -72,28 +74,41 @@ impl LLMBridge for AzureDeepSeekBridge {
             stream: false,
         };
 
-        let endpoint = format!(
-            "{}/deployments/{}/chat/completions?api-version=2024-02-15-preview",
-            self.base_url,
-            self.model
-        );
-
-        let response = self.client
-            .post(&endpoint)
+        let response = self
+            .client
+            .post(format!(
+                "{}/deployments/{}/chat/completions?api-version=2024-02-15-preview",
+                self.base_url, self.model
+            ))
             .header("api-key", &self.api_key)
             .json(&deepseek_req)
             .send()
-            .await?;
+            .await
+            .map_err(|e| LLMServiceError {
+                error: format!("Azure DeepSeek request failed: {}", e),
+            })?;
 
         if !response.status().is_success() {
-            let error_text = response.text().await?;
-            return Err(format!("Azure DeepSeek API error: {} - {}", response.status(), error_text).into());
+            let status = response.status();
+            let error_text = response.text().await.map_err(|e| LLMServiceError {
+                error: format!("Failed to read error response: {}", e),
+            })?;
+            return Err(LLMServiceError {
+                error: format!("Azure DeepSeek API error: {} - {}", status, error_text),
+            });
         }
 
-        let deepseek_resp: DeepSeekResponse = response.json().await?;
-        let content = deepseek_resp.choices
+        let deepseek_resp: DeepSeekResponse =
+            response.json().await.map_err(|e| LLMServiceError {
+                error: format!("Failed to parse Azure DeepSeek response: {}", e),
+            })?;
+
+        let content = deepseek_resp
+            .choices
             .first()
-            .ok_or("No completion choices returned")?
+            .ok_or_else(|| LLMServiceError {
+                error: "No completion choices returned".to_string(),
+            })?
             .message
             .content
             .clone();
@@ -101,7 +116,7 @@ impl LLMBridge for AzureDeepSeekBridge {
         Ok(LLMResponse { content })
     }
 
-    async fn health_check(&self) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
+    async fn health_check(&self) -> Result<bool, LLMServiceError> {
         let deepseek_req = DeepSeekRequest {
             messages: vec![ChatMessage {
                 role: "user".to_string(),
@@ -112,19 +127,20 @@ impl LLMBridge for AzureDeepSeekBridge {
             stream: false,
         };
 
-        let endpoint = format!(
-            "{}/deployments/{}/chat/completions?api-version=2024-02-15-preview",
-            self.base_url,
-            self.model
-        );
-
-        let response = self.client
-            .post(&endpoint)
+        let response = self
+            .client
+            .post(format!(
+                "{}/deployments/{}/chat/completions?api-version=2024-02-15-preview",
+                self.base_url, self.model
+            ))
             .header("api-key", &self.api_key)
             .json(&deepseek_req)
             .send()
-            .await?;
+            .await
+            .map_err(|e| LLMServiceError {
+                error: format!("Health check failed: {}", e),
+            })?;
 
         Ok(response.status().is_success())
     }
-} 
+}
