@@ -5,6 +5,7 @@ use std::fs;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use toml;
+use std::path::Path;
 
 #[derive(Deserialize, Serialize, Clone)]
 
@@ -105,5 +106,10 @@ pub async fn load_config(
 pub async fn save_config(config: Config, config_path: String) {
     let config_str = toml::to_string(&config).expect("Failed to serialize config to TOML");
 
+    if !Path::new(&config_path).exists() {
+        fs::create_dir_all(Path::new(&config_path).parent().unwrap()).expect("Failed to create config directory");
+    }
+
     fs::write(config_path, config_str).expect("Failed to write config file");
+
 }
