@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "lichee",
+        "title": "CCRU",
         "width": 800,
         "height": 600,
         "resizable": true,
