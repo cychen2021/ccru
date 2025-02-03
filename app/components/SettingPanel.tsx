@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Config, canonicalizeProvider } from '../config/config';
 import { AIServiceConfig } from '../config/aiServiceConfig';
+import { useRouter } from 'next/navigation';
 
 interface SettingPanelProps {
   initConfig: Config;
@@ -26,6 +27,7 @@ function SettingItem({ label, children }: { label: string; children: React.React
 
 export function SettingPanel({ initConfig, onSave }: SettingPanelProps) {
   const [config, setConfig] = useState<Config>(initConfig);
+  const router = useRouter();
 
   const [selectedTab, setSelectedTab] = useState<TabId>('general');
 
@@ -185,6 +187,16 @@ export function SettingPanel({ initConfig, onSave }: SettingPanelProps) {
     }
   };
 
+  const handleSave = async () => {
+    try {
+      await onSave(config);
+      router.push('/');
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+      // You may want to show an error message to the user here
+    }
+  };
+
   return (
     <div className="space-y-6 min-w-[600px]">
       <div className="border-b border-gray-200">
@@ -216,13 +228,13 @@ export function SettingPanel({ initConfig, onSave }: SettingPanelProps) {
 
       <div className="flex justify-end gap-4">
         <button
-          onClick={() => window.history.back()}
+          onClick={() => router.push('/')}
           className="w-[100px] px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
         >
           Cancel
         </button>
         <button
-          onClick={() => onSave(config)}
+          onClick={handleSave}
           className="w-[100px] px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
         >
           Save
