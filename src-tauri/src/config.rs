@@ -2,7 +2,8 @@ use crate::llm_bridge::{AzureBridge, DeepSeekBridge, OllamaBridge};
 use crate::AppState;
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+use tokio::sync::Mutex;
 use toml;
 
 #[derive(Deserialize, Serialize, Clone)]
@@ -50,11 +51,11 @@ pub struct LoadConfigResponse {
 }
 
 #[tauri::command]
-pub fn load_config(
-    app_state: tauri::State<Mutex<AppState>>,
+pub async fn load_config(
+    app_state: tauri::State<'_,Mutex<AppState>>,
     config_path: String,
     use_default_when_missing: bool,
-) -> LoadConfigResponse {
+) -> Result<LoadConfigResponse, ()> {
     let mut using_default = false;
     let config_str = match fs::read_to_string(&config_path) {
         Ok(content) => content,
@@ -68,8 +69,9 @@ pub fn load_config(
 
     let config: Config = toml::from_str(&config_str).expect("Failed to parse TOML");
 
-    let mut app_state = app_state.lock().unwrap();
+    let mut app_state = app_state.lock().await;
     app_state.config = Some(config.clone());
+
     match config.ai_service.provider.as_str() {
         "ollama" => {
             app_state.llm_bridge = Some(Arc::new(OllamaBridge::new(
@@ -93,14 +95,14 @@ pub fn load_config(
         _ => panic!("Unsupported AI service provider"),
     }
 
-    LoadConfigResponse {
+    Ok(LoadConfigResponse {
         config: config,
         using_default,
-    }
+    })
 }
 
 #[tauri::command]
-pub fn save_config(config: Config, config_path: String) {
+pub async fn save_config(config: Config, config_path: String) {
     let config_str = toml::to_string(&config).expect("Failed to serialize config to TOML");
 
     fs::write(config_path, config_str).expect("Failed to write config file");

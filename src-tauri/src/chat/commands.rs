@@ -1,11 +1,15 @@
-use crate::chat::ChatMessage;
+use crate::chat::{ChatHistory, ChatMessage};
 use crate::llm_bridge::{LLMRequest, LLMServiceError};
 use crate::AppState;
-use std::sync::Mutex;
+use std::sync::Arc;
+use tokio::sync::Mutex;
 
 #[tauri::command]
 pub async fn create_session(app_state: tauri::State<'_, Mutex<AppState>>) -> Result<String, ()> {
-    let holder = app_state.lock().unwrap();
+    let mut holder = app_state.lock().await;
+    if holder.chat_history.is_none() {
+        holder.chat_history = Some(Arc::new(ChatHistory::new()));
+    }
     let chat_history = holder.chat_history.as_ref().unwrap();
     Ok(chat_history.create_session().await)
 }
@@ -17,7 +21,7 @@ pub async fn add_message(
     role: String,
     content: String,
 ) -> Result<(), String> {
-    let holder = app_state.lock().unwrap();
+    let holder = app_state.lock().await;
     let chat_history = holder.chat_history.as_ref().unwrap();
     chat_history.add_message(&session_id, &role, &content).await
 }
@@ -27,7 +31,7 @@ pub async fn get_session(
     app_state: tauri::State<'_, Mutex<AppState>>,
     session_id: String,
 ) -> Result<Vec<ChatMessage>, ()> {
-    let holder = app_state.lock().unwrap();
+    let holder = app_state.lock().await;
     let chat_history = holder.chat_history.as_ref().unwrap();
     chat_history
         .get_session(&session_id)
@@ -40,10 +44,12 @@ pub async fn get_session(
 pub async fn list_sessions(
     app_state: tauri::State<'_, Mutex<AppState>>,
 ) -> Result<Vec<String>, ()> {
-    let holder = app_state.lock().unwrap();
+    let holder = app_state.lock().await;
     let chat_history = holder.chat_history.as_ref().unwrap();
     Ok(chat_history
         .list_sessions()
+
+
         .await
         .into_iter()
         .map(|session| session.id)
@@ -55,7 +61,7 @@ pub async fn delete_session(
     app_state: tauri::State<'_, Mutex<AppState>>,
     session_id: String,
 ) -> Result<(), String> {
-    let holder = app_state.lock().unwrap();
+    let holder = app_state.lock().await;
     let chat_history = holder.chat_history.as_ref().unwrap();
     chat_history.delete_session(&session_id).await
 }
@@ -66,7 +72,7 @@ pub async fn ask_question(
     session_id: String,
     question: String,
 ) -> Result<String, LLMServiceError> {
-    let holder = app_state.lock().unwrap();
+    let holder = app_state.lock().await;
     let chat_history = holder.chat_history.as_ref().unwrap();
     chat_history
         .add_message(&session_id, "user", &question)

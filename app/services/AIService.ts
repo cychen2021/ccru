@@ -2,17 +2,15 @@ import { invoke } from '@tauri-apps/api/core';
 
 export const aiService ={
   createSession: async (): Promise<string> => {
-    const response = await invoke('create_session') as {
-      sessionId: string;
-    } | {
+    const response = await invoke('create_session') as string | {
       error: unknown;
     }
 
-    if ('error' in response) {
+    if (typeof response !== 'string') {
       throw new Error('Failed to create session ' + JSON.stringify(response.error));
     }
 
-    return response.sessionId;
+    return response;
   },
   askQuestion: async (sessionId: string, question: string): Promise<string> => {
     const response = await invoke('ask_question', { sessionId, question }) as {

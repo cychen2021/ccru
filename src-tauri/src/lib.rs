@@ -6,7 +6,7 @@ use crate::chat::ChatHistory;
 use crate::config::Config;
 use crate::llm_bridge::LLMBridge;
 use std::sync::Arc;
-use std::sync::Mutex;
+use tokio::sync::Mutex;
 use tauri::Manager;
 
 #[derive(Default)]
@@ -35,6 +35,12 @@ pub fn run() {
             config::load_config,
             config::save_config,
             llm_bridge::get_completion,
+            chat::create_session,
+            chat::delete_session,
+            chat::get_session,
+            chat::list_sessions,
+            chat::add_message,
+            chat::ask_question,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
