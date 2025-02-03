@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { Config, loadConfig, saveConfig } from '../config/config';
 import { SettingPanel } from '../components/SettingPanel';
@@ -38,14 +37,8 @@ export default function Settings() {
 
   return (
     <main className="p-4 min-w-[600px]">
-      <div className="flex justify-between items-center mb-6 min-w-[600px]">
+      <div className="flex items-center mb-6 min-w-[600px]">
         <h1 className="text-2xl font-bold">Settings</h1>
-        <Link 
-          href="/"
-          className="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200"
-        >
-          Back
-        </Link>
       </div>
       {config ? (
         <SettingPanel 

@@ -187,12 +187,18 @@ export function SettingPanel({ initConfig, onSave }: SettingPanelProps) {
         {renderTabContent()}
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-4">
+        <button
+          onClick={() => window.history.back()}
+          className="w-[120px] px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+        >
+          Cancel
+        </button>
         <button
           onClick={() => onSave(config)}
-          className="w-[200px] px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          className="w-[120px] px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
         >
-          Save Settings
+          Save
         </button>
       </div>
     </div>
