@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { LoadingDots } from './ui/loading-dots';
+import Markdown from 'react-markdown';
 
 interface ResearchAssistantProps {
   onAskQuestion: (question: string) => Promise<string>;
@@ -20,14 +21,12 @@ function FormattedMessage({message}: {message: string}) {
     return <>
       <div className="bg-gray-100 p-2 rounded border-l-4 border-gray-300">
         <div className="font-medium">Thinking...</div>
-        <div>{think}</div>
+        <Markdown>{think}</Markdown>
       </div>
-      {answer}
+      <Markdown>{answer}</Markdown>
     </>
   } else {
-    return <>
-      {message}
-    </>
+    return <Markdown>{message}</Markdown>
   }
 }
 
@@ -77,7 +76,7 @@ export function ResearchAssistant({ onAskQuestion }: ResearchAssistantProps) {
         {messages.map((message, index) => (
           <div 
             key={index} 
-            className={`text-justify p-2 rounded whitespace-pre-wrap ${
+            className={`p-2 rounded ${
               message.role === 'user' ? 'bg-blue-100 ml-[55%]' : 'bg-gray-100 mr-[55%]'
             }`}
           >
