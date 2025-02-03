@@ -43,7 +43,7 @@ export default function Home() {
         <h1 className="text-2xl font-bold">AI Chat</h1>
         <Link 
           href="/settings"
-          className="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200"
+          className="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200 w-[100px]"
         >
           Settings
         </Link>
