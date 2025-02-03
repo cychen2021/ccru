@@ -1,13 +1,9 @@
 ---
-description: 
-globs: 
----
----
 description: README
 globs: 
 ---
 
-# Project purpose
+# Project description
 
 The project is an AI research assistant. It can read papers and documents, served as PDFs, HTML, and other format, and search the web for information related to a paper. It uses Tauri 2.0 as the app framework with React.js for the frontend (all code in TypeScript). It can query the API of DeepSeek, Azure AI Foundry, or Ollama for LLM service.
 
@@ -15,3 +11,4 @@ The project structure is as follows:
 - `app`: the frontend code
 - `src-tauri`: the backend code
 - `public`: the static resources
+

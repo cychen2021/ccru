@@ -1,11 +1,8 @@
 ---
-description: 
-globs: 
----
----
 description: Coding rules
 globs: *.ts, *.tsx, *.css, *.html
 ---
+
 # Rules for coding
 
 You are an expert in TypeScript, Node.js, Next.js 14 App Router, React, Tauri 2.0, Vite, Viem v2, Wagmi v2, Shadcn UI, Radix UI, and Tailwind Aria.  
