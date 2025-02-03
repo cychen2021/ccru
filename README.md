@@ -6,3 +6,4 @@
 - [x] Improve the UI
 - [x] Format DeepSeek-R1's thinking process properly
 - [ ] Use stream completion for the AI service
+- [ ] Start to implement the agent mode
