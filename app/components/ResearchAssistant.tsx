@@ -48,20 +48,20 @@ export function ResearchAssistant({ onAskQuestion }: ResearchAssistantProps) {
   };
 
   return (
-    <div className="space-y-4 max-w-3xl mx-auto">
+    <div className="space-y-4 max-w-[80%] mx-auto">
       <div className="h-[60vh] overflow-y-auto border rounded p-4 space-y-4">
         {messages.map((message, index) => (
           <div 
             key={index} 
             className={`p-2 rounded ${
-              message.role === 'user' ? 'bg-blue-100 ml-8' : 'bg-gray-100 mr-8'
+              message.role === 'user' ? 'bg-blue-100 ml-[55%]' : 'bg-gray-100 mr-[55%]'
             }`}
           >
             {message.content}
           </div>
         ))}
         {isLoading && (
-          <div className="bg-gray-100 mr-8 p-2 rounded">
+          <div className="bg-gray-100 p-2 rounded mr-[55%]">
             <LoadingDots />
           </div>
         )}
