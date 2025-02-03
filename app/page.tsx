@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { ResearchAssistant } from './components/ResearchAssistant';
-import { aiService } from './services/aiService';
+import { aiService } from './services/AIService';
 import { useState, useEffect } from 'react';
 import { loadConfig } from './config/config';
 import "./index.css";
