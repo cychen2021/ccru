@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { LoadingDots } from './ui/loading-dots';
 import Markdown from 'react-markdown';
 
@@ -8,26 +8,29 @@ interface ResearchAssistantProps {
   onAskQuestion: (question: string) => Promise<string>;
 }
 
-function FormattedMessage({message}: {message: string}) {
-  console.log(`message: ${message}`);
-  const pattern = /\<think\>(?<think>(?:.|\n)*?)\<\/think\>(?<answer>(?:.|\n)*)/mg;
-  const match = pattern.exec(message);
-  if (match) {
-    console.log(`match: ${match}`);
-    const think = match.groups?.think;
-    const answer = match.groups?.answer;
-    console.log(`think: ${think}`);
-    console.log(`answer: ${answer}`);
-    return <>
-      <div className="bg-gray-100 p-2 rounded border-l-4 border-gray-300">
-        <div className="font-medium">Thinking...</div>
-        <Markdown>{think}</Markdown>
-      </div>
-      <Markdown>{answer}</Markdown>
-    </>
-  } else {
-    return <Markdown>{message}</Markdown>
+function FormattedMessage({ children }: { children: string[] }) {
+  if (children.length === 0) {
+    return <></>
   }
+  const elements: React.ReactNode[] = []
+  for (const [idx, child] of children.entries()) {
+    const pattern = /\<think\>(?<think>(?:.|\n)*?)\<\/think\>(?<answer>(?:.|\n)*)/mg;
+    const match = pattern.exec(child);
+    if (match) {
+      const think = match.groups?.think;
+      const answer = match.groups?.answer;
+      elements.push(<React.Fragment key={idx}>
+        <div className="bg-gray-100 p-2 rounded border-l-4 border-gray-300">
+          <div className="font-medium">Thinking...</div>
+          <Markdown>{think}</Markdown>
+        </div>
+        <Markdown>{answer}</Markdown>
+      </React.Fragment>)
+    } else {
+      elements.push(<Markdown key={idx}>{child}</Markdown>)
+    }
+  }
+  return <>{elements}</>
 }
 
 export function ResearchAssistant({ onAskQuestion }: ResearchAssistantProps) {
@@ -80,7 +83,7 @@ export function ResearchAssistant({ onAskQuestion }: ResearchAssistantProps) {
               message.role === 'user' ? 'bg-blue-100 ml-[55%]' : 'bg-gray-100 mr-[55%]'
             }`}
           >
-            <FormattedMessage message={message.content} />
+            <FormattedMessage> {message.content} </FormattedMessage>
           </div>
         ))}
         {isLoading && (
