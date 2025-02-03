@@ -3,5 +3,6 @@
 ## TODOs
 
 - [x] Move the AI service module to the backend
-- [ ] Improve the UI
+- [x] Improve the UI
 - [ ] Format DeepSeek-R1's thinking process properly
+- [ ] Use stream completion for the AI service
