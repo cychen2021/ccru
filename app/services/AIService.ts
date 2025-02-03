@@ -13,16 +13,15 @@ export const aiService ={
     return response;
   },
   askQuestion: async (sessionId: string, question: string): Promise<string> => {
-    const response = await invoke('ask_question', { sessionId, question }) as {
-      answer: string;
-    } | {
+    const response = await invoke('ask_question', { sessionId, question }) as string | {
       error: unknown;
     }
 
-    if ('error' in response) {
+    if (typeof response !== 'string') {
       throw new Error('Failed to ask question ' + JSON.stringify(response.error));
+
     }
 
-    return response.answer;
+    return response;
   }
 }

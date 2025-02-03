@@ -107,9 +107,9 @@ pub async fn load_config(
         }
         "azure-deepseek" => {
             app_state.llm_bridge = Some(Arc::new(AzureDeepSeekBridge::new(
-                &config.ai_service.azure_deepseek.as_ref().unwrap().api_key,
                 &config.ai_service.azure_deepseek.as_ref().unwrap().base_url,
-                "DeepSeek-R1"
+                "DeepSeek-R1",
+                &config.ai_service.azure_deepseek.as_ref().unwrap().api_key,
             )));
         }
         _ => panic!("Unsupported AI service provider"),

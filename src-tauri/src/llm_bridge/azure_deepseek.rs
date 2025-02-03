@@ -78,21 +78,21 @@ impl LLMBridge for AzureDeepSeekBridge {
         let response = self
             .client
             .post(format!(
-                "{}/deployments/{}/chat/completions?api-version=2024-02-15-preview",
-                self.base_url, self.model
+                "{}/v1/chat/completions",
+                self.base_url
             ))
-            .header("api-key", &self.api_key)
+            .header("Authorization", &self.api_key)
             .json(&deepseek_req)
             .send()
             .await
             .map_err(|e| LLMServiceError {
-                error: format!("Azure DeepSeek request failed: {}", e),
+                error: format!("Azure DeepSeek request failed: {:?}", e),
             })?;
 
         if !response.status().is_success() {
             let status = response.status();
             let error_text = response.text().await.map_err(|e| LLMServiceError {
-                error: format!("Failed to read error response: {}", e),
+                error: format!("Failed to read error response: {:?}", e),
             })?;
             return Err(LLMServiceError {
                 error: format!("Azure DeepSeek API error: {} - {}", status, error_text),

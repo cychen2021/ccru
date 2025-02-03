@@ -36,7 +36,7 @@ export function ResearchAssistant({ onAskQuestion }: ResearchAssistantProps) {
     } catch (error) {
       const errorMessage = error instanceof Error 
         ? `Error: ${error.message}`
-        : 'An error occurred while processing your request.';
+        : 'An error occurred while processing your request: ' + JSON.stringify(error);
 
       setMessages(prev => [...prev, { 
         role: 'assistant', 
