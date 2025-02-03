@@ -7,29 +7,30 @@ import { useState, useEffect } from 'react';
 import { loadConfig } from './config/config';
 import "./index.css";
 
-
-
 export default function Home() {
   const [error, setError] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
   useEffect(() => {
     async function init() {
       try {
         await loadConfig();
+        const newSessionId = await aiService.createSession();
+        setSessionId(newSessionId);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to initialize AI service');
-        console.error('Failed to initialize AI service:', err);
+        setError(err instanceof Error ? err.message : 'Failed to initialize');
+        console.error('Failed to initialize:', err);
       }
     }
     init();
   }, []);
 
   const handleQuestion = async (question: string) => {
-    if (!aiService) {
-      return 'AI service not initialized';
+    if (!sessionId) {
+      return 'Session not initialized';
     }
 
-    return await aiService.get_completion([question]);
+    return await aiService.askQuestion(sessionId, question);
   };
 
   if (error) {
@@ -48,10 +49,10 @@ export default function Home() {
         </Link>
       </div>
       
-      {aiService ? (
+      {sessionId ? (
         <ResearchAssistant onAskQuestion={handleQuestion} />
       ) : (
-        <div>Loading AI service...</div>
+        <div>Initializing session...</div>
       )}
     </main>
   );
