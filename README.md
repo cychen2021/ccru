@@ -4,5 +4,5 @@
 
 - [x] Move the AI service module to the backend
 - [x] Improve the UI
-- [ ] Format DeepSeek-R1's thinking process properly
+- [x] Format DeepSeek-R1's thinking process properly
 - [ ] Use stream completion for the AI service

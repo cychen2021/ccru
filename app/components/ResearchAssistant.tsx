@@ -7,6 +7,30 @@ interface ResearchAssistantProps {
   onAskQuestion: (question: string) => Promise<string>;
 }
 
+function FormattedMessage({message}: {message: string}) {
+  console.log(`message: ${message}`);
+  const pattern = /\<think\>(?<think>(?:.|\n)*?)\<\/think\>(?<answer>(?:.|\n)*)/mg;
+  const match = pattern.exec(message);
+  if (match) {
+    console.log(`match: ${match}`);
+    const think = match.groups?.think;
+    const answer = match.groups?.answer;
+    console.log(`think: ${think}`);
+    console.log(`answer: ${answer}`);
+    return <>
+      <div className="bg-gray-100 p-2 rounded border-l-4 border-gray-300">
+        <div className="font-medium">Thinking...</div>
+        <div>{think}</div>
+      </div>
+      {answer}
+    </>
+  } else {
+    return <>
+      {message}
+    </>
+  }
+}
+
 export function ResearchAssistant({ onAskQuestion }: ResearchAssistantProps) {
   const [question, setQuestion] = useState('');
   const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
@@ -53,11 +77,11 @@ export function ResearchAssistant({ onAskQuestion }: ResearchAssistantProps) {
         {messages.map((message, index) => (
           <div 
             key={index} 
-            className={`p-2 rounded ${
+            className={`text-justify p-2 rounded whitespace-pre-wrap ${
               message.role === 'user' ? 'bg-blue-100 ml-[55%]' : 'bg-gray-100 mr-[55%]'
             }`}
           >
-            {message.content}
+            <FormattedMessage message={message.content} />
           </div>
         ))}
         {isLoading && (
