@@ -1,6 +1,7 @@
 mod chat;
 mod config;
 mod llm_bridge;
+mod agent;
 
 use crate::chat::ChatHistory;
 use crate::config::Config;
