@@ -19,7 +19,6 @@ export const aiService ={
 
     if (typeof response !== 'string') {
       throw new Error('Failed to ask question ' + JSON.stringify(response.error));
-
     }
 
     return response;
