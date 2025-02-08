@@ -31,7 +31,6 @@ impl Error for AgentError {}
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Thought {
     pub content: String,
-    pub next_action: Option<Action>,
     pub timestamp: chrono::DateTime<chrono::Utc>,
 }
 
@@ -64,6 +63,7 @@ pub struct Memory {
 pub trait Agent {
     // Core capabilities
     async fn think(&mut self, context: &str) -> Result<Thought, AgentError>;
+    async fn interpret_thought(&self, thought: &Thought) -> Result<Option<Action>, AgentError>;
     async fn observe(&mut self, target: &str) -> Result<Observation, AgentError>;
     async fn execute(&mut self, action: Action) -> Result<Observation, AgentError>;
     
@@ -122,12 +122,12 @@ impl<T: Agent + Send + Sync> AgentBehavior for T {
     async fn run_flow_of_thoughts(&mut self, context: &str) -> Result<Vec<Observation>, AgentError> {
         let mut observations = Vec::new();
         
-        // Generate initial thought
+        // Generate thought
         let thought = self.think(context).await?;
         self.update_memory(Some(thought.clone()), None, None);
         
-        // Execute action if present
-        if let Some(action) = thought.next_action {
+        // Interpret thought and execute any resulting action
+        if let Some(action) = self.interpret_thought(&thought).await? {
             let observation = self.execute(action.clone()).await?;
             self.update_memory(None, Some(observation.clone()), Some(action));
             observations.push(observation);
@@ -147,10 +147,9 @@ pub trait AgentBehavior {
 pub mod utils {
     use super::*;
 
-    pub fn create_thought(content: String, next_action: Option<Action>) -> Thought {
+    pub fn create_thought(content: String) -> Thought {
         Thought {
             content,
-            next_action,
             timestamp: chrono::Utc::now(),
         }
     }
